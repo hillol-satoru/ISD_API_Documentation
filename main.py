@@ -1109,8 +1109,11 @@ async def get_orders(
                       "created_at": "2024-01-15T10:30:00",
                       "updated_at": "2024-01-16T14:00:00"
                   }}}}})
-async def get_order_details(order_id: str = Path(..., example="ord_123")):
-    """Get order details."""
+async def get_order_details(
+    order_id: str = Path(..., example="ord_123"),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Get order details. Requires Bearer token."""
     return {
         "id": "ord_123",
         "order_number": "DRZ-2024-001234",
@@ -1167,8 +1170,11 @@ async def get_order_details(order_id: str = Path(..., example="ord_123")):
                           {"status": "OUT_FOR_DELIVERY", "timestamp": "2024-01-17T08:00:00", "location": "Gulshan Area", "description": "Out for delivery"}
                       ]
                   }}}}})
-async def track_order(order_id: str = Path(..., example="ord_123")):
-    """Track order shipment (Order Tracking page)."""
+async def track_order(
+    order_id: str = Path(..., example="ord_123"),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Track order shipment (Order Tracking page). Requires Bearer token."""
     return {
         "order_id": "ord_123",
         "order_number": "DRZ-2024-001234",
@@ -1187,9 +1193,10 @@ async def track_order(order_id: str = Path(..., example="ord_123")):
 @orders_router.post("/{order_id}/cancel", response_model=MessageResponse)
 async def cancel_order(
     order_id: str = Path(..., example="ord_123"),
-    reason: str = Body(..., embed=True, example="Changed my mind")
+    reason: str = Body(..., embed=True, example="Changed my mind"),
+    current_user: CurrentUser = Depends(get_current_user)
 ):
-    """Cancel an order (only if not shipped yet)."""
+    """Cancel an order (only if not shipped yet). Requires Bearer token."""
     return {"status": "success", "message": "Order cancelled successfully."}
 
 # Cart Router
@@ -1238,12 +1245,15 @@ async def get_cart(current_user: CurrentUser = Depends(get_current_user)):
     }
 
 @cart_router.post("/items", response_model=Cart, status_code=status.HTTP_201_CREATED)
-async def add_to_cart(item: CartItemAdd = Body(..., example={
-    "product_id": "prod_123",
-    "quantity": 1,
-    "variation": "Black"
-})):
-    """Add item to cart."""
+async def add_to_cart(
+    item: CartItemAdd = Body(..., example={
+        "product_id": "prod_123",
+        "quantity": 1,
+        "variation": "Black"
+    }),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Add item to cart. Requires Bearer token."""
     return {
         "items": [{
             "id": "cart_item_1",
@@ -1267,9 +1277,10 @@ async def add_to_cart(item: CartItemAdd = Body(..., example={
 @cart_router.put("/items/{item_id}", response_model=Cart)
 async def update_cart_item(
     item_id: str = Path(..., example="cart_item_1"),
-    update: CartItemUpdate = Body(..., example={"quantity": 3})
+    update: CartItemUpdate = Body(..., example={"quantity": 3}),
+    current_user: CurrentUser = Depends(get_current_user)
 ):
-    """Update cart item quantity."""
+    """Update cart item quantity. Requires Bearer token."""
     return {
         "items": [{
             "id": item_id,
@@ -1291,13 +1302,19 @@ async def update_cart_item(
     }
 
 @cart_router.delete("/items/{item_id}", response_model=MessageResponse)
-async def remove_from_cart(item_id: str = Path(..., example="cart_item_1")):
-    """Remove item from cart."""
+async def remove_from_cart(
+    item_id: str = Path(..., example="cart_item_1"),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Remove item from cart. Requires Bearer token."""
     return {"status": "success", "message": "Item removed from cart."}
 
 @cart_router.post("/apply-voucher", response_model=Cart)
-async def apply_voucher(voucher_code: str = Body(..., embed=True, example="SAVE100")):
-    """Apply voucher code to cart."""
+async def apply_voucher(
+    voucher_code: str = Body(..., embed=True, example="SAVE100"),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Apply voucher code to cart. Requires Bearer token."""
     return {
         "items": [{
             "id": "cart_item_1",
@@ -1398,18 +1415,27 @@ async def get_wishlist(current_user: CurrentUser = Depends(get_current_user)):
     }]
 
 @wishlist_router.post("/{product_id}", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
-async def add_to_wishlist(product_id: str = Path(..., example="prod_456")):
-    """Add product to wishlist."""
+async def add_to_wishlist(
+    product_id: str = Path(..., example="prod_456"),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Add product to wishlist. Requires Bearer token."""
     return {"status": "success", "message": "Added to wishlist."}
 
 @wishlist_router.delete("/{product_id}", response_model=MessageResponse)
-async def remove_from_wishlist(product_id: str = Path(..., example="prod_456")):
-    """Remove product from wishlist."""
+async def remove_from_wishlist(
+    product_id: str = Path(..., example="prod_456"),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Remove product from wishlist. Requires Bearer token."""
     return {"status": "success", "message": "Removed from wishlist."}
 
 @wishlist_router.post("/{product_id}/move-to-cart", response_model=MessageResponse)
-async def move_to_cart(product_id: str = Path(..., example="prod_456")):
-    """Move wishlist item to cart."""
+async def move_to_cart(
+    product_id: str = Path(..., example="prod_456"),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Move wishlist item to cart. Requires Bearer token."""
     return {"status": "success", "message": "Item moved to cart."}
 
 # Reviews Router
@@ -1423,8 +1449,8 @@ reviews_router = APIRouter(prefix="/v1/customer/reviews", tags=["Customer-Review
                        "product_image": "https://cdn.daraz.com/products/p1.jpg",
                        "order_date": "2024-01-10T10:00:00"
                    }]}}}})
-async def get_pending_reviews():
-    """Get products pending review (To Review tab)."""
+async def get_pending_reviews(current_user: CurrentUser = Depends(get_current_user)):
+    """Get products pending review (To Review tab). Requires Bearer token."""
     return [{
         "order_item_id": "item_123",
         "product_id": "prod_789",
@@ -1448,8 +1474,8 @@ async def get_pending_reviews():
                        "created_at": "2024-01-12T14:00:00",
                        "helpful_count": 5
                    }]}}}})
-async def get_submitted_reviews():
-    """Get submitted reviews (Reviewed tab)."""
+async def get_submitted_reviews(current_user: CurrentUser = Depends(get_current_user)):
+    """Get submitted reviews (Reviewed tab). Requires Bearer token."""
     return [{
         "id": "rev_123",
         "product_id": "prod_456",
@@ -1466,13 +1492,16 @@ async def get_submitted_reviews():
     }]
 
 @reviews_router.post("", response_model=Review, status_code=status.HTTP_201_CREATED)
-async def submit_review(review: ReviewCreate = Body(..., example={
-    "order_item_id": "item_123",
-    "rating": 5,
-    "comment": "Great product, highly recommend!",
-    "images": ["https://cdn.daraz.com/reviews/user_upload.jpg"]
-})):
-    """Submit a product review."""
+async def submit_review(
+    review: ReviewCreate = Body(..., example={
+        "order_item_id": "item_123",
+        "rating": 5,
+        "comment": "Great product, highly recommend!",
+        "images": ["https://cdn.daraz.com/reviews/user_upload.jpg"]
+    }),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Submit a product review. Requires Bearer token."""
     return {
         "id": "rev_new",
         "product_id": "prod_789",
@@ -1509,8 +1538,11 @@ returns_router = APIRouter(prefix="/v1/customer/returns", tags=["Customer-Return
                        "created_at": "2024-01-15T10:00:00",
                        "updated_at": "2024-01-16T14:00:00"
                    }]}}}})
-async def get_returns(status: Optional[ReturnStatus] = Query(None)):
-    """Get return requests (My Returns page)."""
+async def get_returns(
+    status: Optional[ReturnStatus] = Query(None),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Get return requests (My Returns page). Requires Bearer token."""
     return [{
         "id": "ret_123",
         "return_number": "RET-2024-0001",
@@ -1530,8 +1562,11 @@ async def get_returns(status: Optional[ReturnStatus] = Query(None)):
     }]
 
 @returns_router.get("/{return_id}", response_model=Return)
-async def get_return_details(return_id: str = Path(..., example="ret_123")):
-    """Get return request details (Return Details page)."""
+async def get_return_details(
+    return_id: str = Path(..., example="ret_123"),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Get return request details (Return Details page). Requires Bearer token."""
     return {
         "id": "ret_123",
         "return_number": "RET-2024-0001",
@@ -1551,15 +1586,18 @@ async def get_return_details(return_id: str = Path(..., example="ret_123")):
     }
 
 @returns_router.post("", response_model=Return, status_code=status.HTTP_201_CREATED)
-async def create_return(return_request: ReturnRequest = Body(..., example={
-    "order_id": "ord_123",
-    "order_item_id": "item_1",
-    "reason": "DAMAGED",
-    "description": "Product arrived with broken case",
-    "images": ["https://cdn.daraz.com/returns/damage1.jpg"],
-    "refund_method": "BKASH"
-})):
-    """Create a return request."""
+async def create_return(
+    return_request: ReturnRequest = Body(..., example={
+        "order_id": "ord_123",
+        "order_item_id": "item_1",
+        "reason": "DAMAGED",
+        "description": "Product arrived with broken case",
+        "images": ["https://cdn.daraz.com/returns/damage1.jpg"],
+        "refund_method": "BKASH"
+    }),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Create a return request. Requires Bearer token."""
     return {
         "id": "ret_new",
         "return_number": "RET-2024-0002",
@@ -2080,9 +2118,10 @@ async def update_product(
         "price": 1400.00,
         "discount_price": 1100.00,
         "stock": 100
-    })
+    }),
+    current_user: CurrentUser = Depends(get_current_seller)
 ):
-    """Update product details (Edit product - extends Set Price)."""
+    """Update product details (Edit product - extends Set Price). Requires Seller Bearer token."""
     return {
         "id": product_id,
         "title": "Wireless Earbuds",
@@ -2107,8 +2146,11 @@ async def update_product(
     }
 
 @seller_products_router.delete("/{product_id}", response_model=MessageResponse)
-async def delete_product(product_id: str = Path(..., example="prod_123")):
-    """Delete a product."""
+async def delete_product(
+    product_id: str = Path(..., example="prod_123"),
+    current_user: CurrentUser = Depends(get_current_seller)
+):
+    """Delete a product. Requires Seller Bearer token."""
     return {"status": "success", "message": "Product deleted successfully."}
 
 # Seller Orders Router
@@ -2173,9 +2215,10 @@ async def update_order_status(
         "status": "TO_RECEIVE",
         "tracking_number": "TRK123456789",
         "carrier": "Daraz Express"
-    })
+    }),
+    current_user: CurrentUser = Depends(get_current_seller)
 ):
-    """Update order status and add tracking (Update Product Status use case)."""
+    """Update order status and add tracking (Update Product Status use case). Requires Seller Bearer token."""
     return {
         "id": order_id,
         "order_number": "DRZ-2024-001234",
@@ -2200,9 +2243,10 @@ async def update_order_status(
 @seller_orders_router.post("/{order_id}/request-rider", response_model=MessageResponse)
 async def request_rider(
     order_id: str = Path(..., example="ord_123"),
-    pickup_address_id: str = Body(..., embed=True, example="addr_warehouse_1")
+    pickup_address_id: str = Body(..., embed=True, example="addr_warehouse_1"),
+    current_user: CurrentUser = Depends(get_current_seller)
 ):
-    """Request rider for delivery (Request Rider use case - includes Inform delivery location)."""
+    """Request rider for delivery (Request Rider use case - includes Inform delivery location). Requires Seller Bearer token."""
     return {"status": "success", "message": "Rider requested. Pickup scheduled."}
 
 # Seller Returns Router
@@ -2226,8 +2270,11 @@ seller_returns_router = APIRouter(prefix="/v1/seller/returns", tags=["Seller-Ret
                               "created_at": "2024-01-15T10:00:00",
                               "updated_at": "2024-01-15T10:00:00"
                           }]}}}})
-async def get_seller_returns(status: Optional[ReturnStatus] = Query(None)):
-    """Get return requests for seller (Return Orders page)."""
+async def get_seller_returns(
+    status: Optional[ReturnStatus] = Query(None),
+    current_user: CurrentUser = Depends(get_current_seller)
+):
+    """Get return requests for seller (Return Orders page). Requires Seller Bearer token."""
     return [{
         "id": "ret_123",
         "return_number": "RET-2024-0001",
@@ -2249,9 +2296,10 @@ async def get_seller_returns(status: Optional[ReturnStatus] = Query(None)):
 @seller_returns_router.put("/{return_id}/decide", response_model=Return)
 async def decide_return(
     return_id: str = Path(..., example="ret_123"),
-    decision: ReturnDecision = Body(..., example={"approved": True, "reason": None})
+    decision: ReturnDecision = Body(..., example={"approved": True, "reason": None}),
+    current_user: CurrentUser = Depends(get_current_seller)
 ):
-    """Approve or reject return request (Return Amount use case - includes Process Refund)."""
+    """Approve or reject return request (Return Amount use case - includes Process Refund). Requires Seller Bearer token."""
     return {
         "id": return_id,
         "return_number": "RET-2024-0001",
@@ -2288,8 +2336,8 @@ seller_promotions_router = APIRouter(prefix="/v1/seller/promotions", tags=["Sell
                                  "status": "active",
                                  "applicable_products": []
                              }]}}}})
-async def get_vouchers():
-    """Get seller vouchers (Promotions page - Vouchers tab)."""
+async def get_vouchers(current_user: CurrentUser = Depends(get_current_seller)):
+    """Get seller vouchers (Promotions page - Vouchers tab). Requires Seller Bearer token."""
     return [{
         "id": "voucher_1",
         "code": "SAVE100",
@@ -2306,18 +2354,21 @@ async def get_vouchers():
     }]
 
 @seller_promotions_router.post("/vouchers", response_model=Voucher, status_code=status.HTTP_201_CREATED)
-async def create_voucher(voucher: VoucherCreate = Body(..., example={
-    "code": "NEWDEAL20",
-    "discount_type": "percentage",
-    "discount_value": 20,
-    "min_purchase": 1000,
-    "max_discount": 500,
-    "start_date": "2024-02-01T00:00:00",
-    "end_date": "2024-02-28T23:59:59",
-    "usage_limit": 500,
-    "applicable_products": []
-})):
-    """Create new voucher (Advertise Promo/Offer use case)."""
+async def create_voucher(
+    voucher: VoucherCreate = Body(..., example={
+        "code": "NEWDEAL20",
+        "discount_type": "percentage",
+        "discount_value": 20,
+        "min_purchase": 1000,
+        "max_discount": 500,
+        "start_date": "2024-02-01T00:00:00",
+        "end_date": "2024-02-28T23:59:59",
+        "usage_limit": 500,
+        "applicable_products": []
+    }),
+    current_user: CurrentUser = Depends(get_current_seller)
+):
+    """Create new voucher (Advertise Promo/Offer use case). Requires Seller Bearer token."""
     return {
         "id": "voucher_new",
         "code": voucher.code,
@@ -2334,8 +2385,8 @@ async def create_voucher(voucher: VoucherCreate = Body(..., example={
     }
 
 @seller_promotions_router.get("/campaigns", response_model=List[Campaign])
-async def get_campaigns():
-    """Get seller campaigns (Promote Products use case)."""
+async def get_campaigns(current_user: CurrentUser = Depends(get_current_seller)):
+    """Get seller campaigns (Promote Products use case). Requires Seller Bearer token."""
     return [{
         "id": "camp_1",
         "name": "January Sale",
@@ -2349,15 +2400,18 @@ async def get_campaigns():
     }]
 
 @seller_promotions_router.post("/campaigns", response_model=Campaign, status_code=status.HTTP_201_CREATED)
-async def create_campaign(campaign: CampaignCreate = Body(..., example={
-    "name": "February Flash",
-    "description": "Limited time offers",
-    "start_date": "2024-02-01T00:00:00",
-    "end_date": "2024-02-07T23:59:59",
-    "discount_percentage": 25,
-    "product_ids": ["prod_123", "prod_456"]
-})):
-    """Create new campaign (Promote Products use case)."""
+async def create_campaign(
+    campaign: CampaignCreate = Body(..., example={
+        "name": "February Flash",
+        "description": "Limited time offers",
+        "start_date": "2024-02-01T00:00:00",
+        "end_date": "2024-02-07T23:59:59",
+        "discount_percentage": 25,
+        "product_ids": ["prod_123", "prod_456"]
+    }),
+    current_user: CurrentUser = Depends(get_current_seller)
+):
+    """Create new campaign (Promote Products use case). Requires Seller Bearer token."""
     return {
         "id": "camp_new",
         "name": campaign.name,
@@ -2392,8 +2446,8 @@ seller_income_router = APIRouter(prefix="/v1/seller/income", tags=["Seller-Incom
                                  "processed_at": "2024-01-11T14:00:00"
                              }]
                          }}}}})
-async def get_income():
-    """Get seller income overview (My Income page - See Stats, View Earning use cases)."""
+async def get_income(current_user: CurrentUser = Depends(get_current_seller)):
+    """Get seller income overview (My Income page - See Stats, View Earning use cases). Requires Seller Bearer token."""
     return {
         "overview": {
             "available_balance": 45000.00,
@@ -2414,8 +2468,8 @@ async def get_income():
     }
 
 @seller_income_router.get("/stats", response_model=Dict[str, Any])
-async def get_seller_stats():
-    """Get seller statistics (See Stats use case - extends View Earning, See Rating)."""
+async def get_seller_stats(current_user: CurrentUser = Depends(get_current_seller)):
+    """Get seller statistics (See Stats use case - extends View Earning, See Rating). Requires Seller Bearer token."""
     return {
         "rating": 4.7,
         "total_reviews": 1250,
@@ -2433,12 +2487,15 @@ async def get_seller_stats():
     }
 
 @seller_income_router.post("/withdraw", response_model=PayoutRecord, status_code=status.HTTP_201_CREATED)
-async def request_withdrawal(request: WithdrawalRequest = Body(..., example={
-    "amount": 20000.00,
-    "method": "bKash",
-    "account_details": "01712345678"
-})):
-    """Request withdrawal."""
+async def request_withdrawal(
+    request: WithdrawalRequest = Body(..., example={
+        "amount": 20000.00,
+        "method": "bKash",
+        "account_details": "01712345678"
+    }),
+    current_user: CurrentUser = Depends(get_current_seller)
+):
+    """Request withdrawal. Requires Seller Bearer token."""
     return {
         "id": "pay_new",
         "amount": request.amount,
@@ -2516,9 +2573,10 @@ async def update_delivery_status(
         "notes": "Delivered to customer",
         "proof_image": "https://cdn.daraz.com/proofs/del_123.jpg",
         "recipient_name": "John Doe"
-    })
+    }),
+    current_user: CurrentUser = Depends(get_current_rider)
 ):
-    """Update delivery status (Update Product Status use case from Rider)."""
+    """Update delivery status (Update Product Status use case from Rider). Requires Rider Bearer token."""
     return {
         "id": delivery_id,
         "order_id": "ord_456",
@@ -2538,9 +2596,10 @@ async def update_delivery_status(
 @rider_router.post("/deliveries/{delivery_id}/contact-customer", response_model=MessageResponse)
 async def contact_customer(
     delivery_id: str = Path(..., example="del_123"),
-    message: str = Body(..., embed=True, example="I am arriving in 10 minutes.")
+    message: str = Body(..., embed=True, example="I am arriving in 10 minutes."),
+    current_user: CurrentUser = Depends(get_current_rider)
 ):
-    """Contact customer for delivery (Contact Customer For Delivery use case)."""
+    """Contact customer for delivery (Contact Customer For Delivery use case). Requires Rider Bearer token."""
     return {"status": "success", "message": "Customer notified via SMS."}
 
 # ====================== PICKUP POINT ROUTER ======================
@@ -2600,9 +2659,10 @@ async def update_pickup_status(
     update: PickupStatusUpdate = Body(..., example={
         "status": "PICKED_UP",
         "notes": "Customer collected with valid ID"
-    })
+    }),
+    current_user: CurrentUser = Depends(get_current_pickup_point)
 ):
-    """Update pickup order status (Update Shipping Status use case)."""
+    """Update pickup order status (Update Shipping Status use case). Requires PickupPoint Bearer token."""
     return {
         "id": pickup_id,
         "order_id": "ord_456",
@@ -2619,9 +2679,10 @@ async def update_pickup_status(
 @pickup_point_router.post("/orders/{pickup_id}/contact-customer", response_model=MessageResponse)
 async def contact_customer_for_pickup(
     pickup_id: str = Path(..., example="pickup_123"),
-    message: str = Body(..., embed=True, example="Your order is ready for pickup. Please collect within 5 days.")
+    message: str = Body(..., embed=True, example="Your order is ready for pickup. Please collect within 5 days."),
+    current_user: CurrentUser = Depends(get_current_pickup_point)
 ):
-    """Contact customer for pickup (Contact Customer For Pickup use case)."""
+    """Contact customer for pickup (Contact Customer For Pickup use case). Requires PickupPoint Bearer token."""
     return {"status": "success", "message": "Customer notified via SMS."}
 
 # ====================== ADMIN MODELS ======================
