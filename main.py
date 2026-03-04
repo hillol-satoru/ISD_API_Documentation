@@ -1919,7 +1919,8 @@ async def get_category_filters(category_id: str = Path(..., example="cat_mobile_
                         "seller_id": "sel_456",
                         "seller_name": "Audio World BD",
                         "status": "ACTIVE",
-                        "created_at": "2023-06-15T10:00:00"
+                        "created_at": "2023-06-15T10:00:00",
+                        "reliability": 4.8
                     }}}}})
 async def get_product(product_id: str = Path(..., example="prod_123")):
     """Get product details (Product Page)."""
@@ -3109,3 +3110,4 @@ app.include_router(admin_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
+
