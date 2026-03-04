@@ -901,8 +901,8 @@ account_router = APIRouter(prefix="/v1/customer/account", tags=["Customer-Accoun
                        "date_of_birth": "1990-05-15",
                        "profile_image": "https://cdn.daraz.com/profiles/usr_123.jpg"
                    }}}}})
-async def get_profile():
-    """Get customer profile (My Profile page)."""
+async def get_profile(current_user: CurrentUser = Depends(get_current_user)):
+    """Get customer profile (My Profile page). Requires Bearer token."""
     return {
         "user_id": "usr_123",
         "full_name": "John Doe",
@@ -934,7 +934,7 @@ async def update_profile(
         "profile_image": None
     }
 
-@account_router.post("/change-password", response_model=MessageResponse)
+@auth_router.post("/change-password", response_model=MessageResponse)
 async def change_password(
     passwords: PasswordChange = Body(..., example={
         "current_password": "oldPassword123",
